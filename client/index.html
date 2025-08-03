@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-Time Chat</title>
+  <style>
+    /* Basic chat interface styling */
+    #chat {
+      font-family: Arial;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #messages {
+      border: 1px solid #ddd;
+      height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #messageInput {
+      width: 80%;
+      padding: 8px;
+    }
+    button {
+      padding: 8px 15px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <h1>WebSocket Chat</h1>
+    <div id="messages"></div>
+    <input 
+      id="messageInput" 
+      type="text" 
+      placeholder="Type your message..."
+      aria-label="Chat message input"
+    >
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    // 1. Connect to WebSocket server
+    const ws = new WebSocket('ws://localhost:3001');
+
+    // 2. Handle WebSocket connection opening
+    ws.onopen = () => {
+      console.log('Connected to chat server');
+      addMessageToUI('System: You are connected!');
+    };
+
+    // 3. Handle incoming messages from server
+    ws.onmessage = (event) => {
+      addMessageToUI(event.data);
+    };
+
+    // 4. Handle connection errors
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      addMessageToUI('System: Connection error');
+    };
+
+    // 5. Handle connection closing
+    ws.onclose = () => {
+      addMessageToUI('System: Disconnected from server');
+    };
+
+    // Helper function to add messages to the UI
+    function addMessageToUI(message) {
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML += `<p>${message}</p>`;
+      // Auto-scroll to bottom
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Send message function
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      
+      if (message && ws.readyState === WebSocket.OPEN) {
+        ws.send(message);
+        input.value = ''; // Clear input field
+      }
+    }
+
+    // Allow sending messages with Enter key
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
